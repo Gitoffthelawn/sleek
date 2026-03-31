@@ -39,17 +39,16 @@ apps:
       - removable-media
 parts:
   sleek:
-    plugin: nil
+    plugin: npm
+    npm-include-node: true
+    npm-node-version: 25.8.1
     build-environment:
       - PATH: "$PATH:$SNAPCRAFT_PART_BUILD/node_modules/.bin"
-    build-snaps:
-      - node/22/stable
     source: .
     override-build: |
       if [ -n "$http_proxy" ]; then
         export ELECTRON_GET_USE_PROXY=1
         export GLOBAL_AGENT_HTTP_PROXY="${http_proxy}"
-        export GLOBAL_AGENT_HTTPS_PROXY="${http_proxy}"
       fi
 
       npm install
@@ -61,8 +60,11 @@ parts:
       - libnss3
   cleanup:
     after: [sleek]
-    plugin: nil
+    plugin: npm
+    npm-node-version: 25.8.1
+    npm-include-node: true
     build-snaps: [gnome-42-2204]
+    source: .
     override-prime: |
       cd sleek
       ls -l
