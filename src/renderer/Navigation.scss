@@ -50,8 +50,8 @@
       background: Variables.$light-grey;
     }
     &:focus-visible {
-      background: Variables.$mid-grey;
-      border-color: Variables.$mid-grey;
+  outline: 2px solid Variables.$blue;
+  outline-offset: -2px;
     }
     &.logo,
     &.logo:hover {

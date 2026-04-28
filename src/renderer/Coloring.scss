@@ -6,7 +6,10 @@ button:not(.MuiIconButton-root):not(.MuiTab-root):not(
   ),
 button:hover:not(.MuiIconButton-root) {
   &:focus-visible {
-    outline: 0.1em solid Variables.$dark-grey;
+    background-color: #ffffff;
+    color: #1976d2;
+    outline: 2px solid #1976d2;
+    outline-offset: -2px;
   }
 }
 
@@ -33,7 +36,10 @@ button:hover:not(.MuiIconButton-root) {
     color: var(--color1);
     background: var(--color2);
     &:focus-visible {
-      outline-color: var(--color1);
+      background-color: #ffffff;
+      color: #1976d2;
+      outline: 2px solid #1976d2;
+      outline-offset: -2px;
     }
     .MuiChip-root {
       color: white;
@@ -143,9 +149,12 @@ button:hover:not(.MuiIconButton-root) {
 }
 
 .dark {
-  button:not(.MuiIconButton-root),
-  button:hover:not(.MuiIconButton-root) {
-    outline-color: Variables.$light-grey;
+  button:not(.MuiIconButton-root):focus-visible,
+  button:hover:not(.MuiIconButton-root):focus-visible {
+    outline: none;
+  }
+  *[data-todotxt-attribute] button:focus-visible {
+    outline: none;
   }
   *[data-todotxt-attribute]:not(
       [data-todotxt-attribute="priority"],
