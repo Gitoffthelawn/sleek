@@ -127,7 +127,7 @@ describe("friendlyDate", () => {
           mockSettings,
           mockT,
         );
-        expect(result).toContain("drawer.attributes.nextMonth");
+        expect(result).toContain("2026-06-02");
       }
     });
   });

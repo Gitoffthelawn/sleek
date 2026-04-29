@@ -1,7 +1,8 @@
-import React, { memo, ReactElement, ReactNode, useState } from "react";
+import React, { memo, ReactElement, useState, useCallback, useEffect } from "react";
 import List from "@mui/material/List";
 import Row from "./Row";
 import Group from "./Group";
+import { useThrottledCallback } from "../utils/throttle";
 import "./Grid.scss";
 import {
   ContextMenu,
@@ -39,9 +40,7 @@ const GridComponent: React.FC<GridComponentProps> = memo(
     headers,
     searchString,
   }) => {
-    const renderedRows: number[] = [];
-    const list = document.getElementById("grid");
-    const [loadMoreRows, setLoadMoreRows] = useState(false);
+    const renderedRowsSet = new Set<number>();
     const [maxRows, setMaxRows] = useState(
       Math.floor(window.innerHeight / 35) * 2,
     );
@@ -87,28 +86,36 @@ const GridComponent: React.FC<GridComponentProps> = memo(
       }
     };
 
-    const handleScroll = (): void => {
-      if (list) {
-        const a: number = list.scrollTop;
-        const b: number = list.scrollHeight - list.clientHeight;
-        const c: number = a / b;
+    const handleScroll = useCallback(
+      (event: React.UIEvent<HTMLUListElement>): void => {
+        const list = event.currentTarget || document.getElementById("grid");
+        if (!list) return;
 
-        if (c >= 0.85 && renderedRows.length < headers.availableObjects) {
-          setLoadMoreRows(true);
-        }
+        const scrollTop: number = list.scrollTop;
+        const scrollHeight: number = list.scrollHeight - list.clientHeight;
+        const scrollRatio: number = scrollHeight > 0 ? scrollTop / scrollHeight : 0;
 
-        if (loadMoreRows) {
-          setLoadMoreRows(false);
-          setMaxRows((maxRows) => maxRows + 30);
-          ipcRenderer.send("requestData", searchString);
+        if (
+          scrollRatio >= 0.85 &&
+          maxRows < headers.availableObjects
+        ) {
+          setMaxRows((prev) => prev + 30);
         }
-      }
-    };
+      },
+      [headers.availableObjects, maxRows]
+    );
+
+    const throttledHandleScroll = useThrottledCallback(handleScroll, 300);
+
+    // Move IPC call to useEffect - only triggers when maxRows or searchString changes
+    useEffect(() => {
+      ipcRenderer.send("requestData", searchString);
+    }, [maxRows, searchString]);
 
     if (headers.visibleObjects === 0) return null;
 
     return (
-      <List id="grid" onScroll={handleScroll} onKeyUp={handleKeyUp}>
+      <List id="grid" onScroll={throttledHandleScroll} onKeyUp={handleKeyUp}>
         {todoData &&
           todoData.map((group, groupIndex) => {
             if (!group.visible) {
@@ -130,12 +137,12 @@ const GridComponent: React.FC<GridComponentProps> = memo(
               // Add rows
               for (let i = 0; i < group.todoObjects.length; i++) {
                 const todoObject = group.todoObjects[i];
-                if (renderedRows.length >= maxRows) {
+                if (renderedRowsSet.size >= maxRows) {
                   break;
-                } else if (renderedRows.includes(todoObject.lineNumber)) {
+                } else if (renderedRowsSet.has(todoObject.lineNumber)) {
                   continue;
                 }
-                renderedRows.push(todoObject.lineNumber);
+                renderedRowsSet.add(todoObject.lineNumber);
                 result.push(
                   <Row
                     key={`row-${todoObject.lineNumber}`}
